@@ -8,18 +8,20 @@ import colorama
 from tkinter import messagebox
 from tkinter import ttk
 from logic import GameLogic
+from i18n import Translator
 
 colorama.init(autoreset=True)
+tr = Translator(lang_code="ru_RU")
 
 class GameUI:
     def __init__(self, root):
         self.game = GameLogic()
         self.root = root
-        self.root.title("Угадай число")
+        self.root.title(tr.__("Guess the number"))
         self.root.geometry("700x520")
         self.show_banner()
 
-        self.label = tk.Label(root, text="Угадай число от 1 до 100", font=("Arial", 14))
+        self.label = tk.Label(root, text=tr.__("Guess a number between 1 and 100"), font=("Arial", 14))
         self.label.pack(pady=10)
 
         self.entry = tk.Entry(root, font=("Arial", 12))
@@ -28,7 +30,7 @@ class GameUI:
 
         self.prepare_buttons()
 
-        self.status = tk.Label(root, text="У тебя 10 попыток", font=("Arial", 14))
+        self.status = tk.Label(root, text=tr.__("You have {} attempts", self.game.max_attempts), font=("Arial", 14))
         self.status.pack()
         self.prepare_table()
 
@@ -37,7 +39,7 @@ class GameUI:
         self.entry.delete(0, tk.END)
 
         if not guess_str.isdigit():
-            messagebox.showwarning("Ошибка", "Введите число!")
+            messagebox.showwarning(tr.__("Error"), tr.__("Enter a number!"))
             return
 
         guess = int(guess_str)
@@ -45,37 +47,32 @@ class GameUI:
         attempt_no = self.game.attempts
 
         resultText = {
-            "<": "Меньше",
-            ">": "Больше",
-            "==": "Угадал"
+            "<": "Lower",
+            ">": "Higher",
+            "==": "Victory"
         }.get(result, "???")
 
-        self.results_table.insert("", tk.END, values=(attempt_no, guess, resultText))
+        self.results_table.insert("", tk.END, values=(attempt_no, guess, tr.__(resultText)))
 
-        if result == ">":
+        if result == ">" or result == "<":
             self.status.config(
-                text=f"Больше! Осталось: {self.game.remaining_attempts()}",
-                font=("Arial", 14)
-            )
-        elif result == "<":
-            self.status.config(
-                text=f"Меньше! Осталось: {self.game.remaining_attempts()}",
+                text=tr.__("{}! Attempts left: {}", tr.__(resultText), self.game.remaining_attempts()),
                 font=("Arial", 14)
             )
         elif result == "==":
-            messagebox.showinfo("Победа!", f"Ты угадал за {self.game.attempts} попыток!")
+            messagebox.showinfo(tr.__(resultText) + "!", f"You guessed it in {self.game.attempts} tries!")
             self.restart_game()
             return
 
         if self.game.is_game_over():
-            messagebox.showerror("Проигрыш", f"Число было: {self.game.secret}")
+            messagebox.showerror("Game Over", f"Number was: {self.game.secret}")
             self.restart_game()
 
     def restart_game(self):
         self.game.reset()
         for row in self.results_table.get_children():
             self.results_table.delete(row)
-        self.status.config(text="У тебя 10 попыток", font=("Arial", 14))
+        self.status.config(text=f"You have {self.game.max_attempts} attempts", font=("Arial", 14))
         self.entry.delete(0, tk.END)
         self.entry.focus()
 
@@ -88,7 +85,7 @@ class GameUI:
             with open(filepath, encoding="utf-8") as file:
                  banner_text = file.read()
         except FileNotFoundError:
-            banner_text = "Угадай число"
+            banner_text = "Guess the number"
 
         text_widget = tk.Text(
             self.root,
@@ -106,8 +103,8 @@ class GameUI:
         table_frame = tk.Frame(self.root)
         table_frame.pack(pady=10, anchor="center")
 
-        self.check_button = tk.Button(table_frame, text="Проверить", command=self.process_input)
-        self.restart_button = tk.Button(table_frame, text="Заново", command=self.restart_game)
+        self.check_button = tk.Button(table_frame, text="Check", command=self.process_input)
+        self.restart_button = tk.Button(table_frame, text="Restart", command=self.restart_game)
 
         self.check_button.grid(row=0, column=0)
         self.restart_button.grid(row=0, column=1)
@@ -126,7 +123,7 @@ class GameUI:
             table_frame,
             columns=list(columns),
             show="headings",
-            height=3
+            height=9
         )
 
         for name, width in columns.items():

@@ -14,7 +14,7 @@ class GameLogic:
 
     def check_guess(self, guess):
         if self.finished:
-            return "Игра уже завершена."
+            return tr.__("The game is over.")
 
         self.attempts += 1
 
