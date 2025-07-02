@@ -6,15 +6,17 @@ import tkinter as tk
 import colorama
 
 from tkinter import messagebox
+from tkinter import ttk
 from logic import GameLogic
 
 colorama.init(autoreset=True)
 
 class GameUI:
     def __init__(self, root):
+        self.game = GameLogic()
         self.root = root
         self.root.title("Угадай число")
-        self.game = GameLogic()
+        self.root.geometry("700x520")
         self.show_banner()
 
         self.label = tk.Label(root, text="Угадай число от 1 до 100", font=("Arial", 14))
@@ -24,15 +26,11 @@ class GameUI:
         self.entry.pack()
         self.entry.bind('<Return>', self.on_enter_pressed)
 
-        self.button = tk.Button(root, text="Проверить", command=self.process_input)
-        self.button.pack(pady=5)
-
-        self.button = tk.Button(root, text="Заново", command=self.restart_game)
-        self.button.pack(pady=5)
+        self.prepare_buttons()
 
         self.status = tk.Label(root, text="У тебя 10 попыток", font=("Arial", 14))
         self.status.pack()
-
+        self.prepare_table()
 
     def process_input(self):
         guess_str = self.entry.get()
@@ -44,6 +42,15 @@ class GameUI:
 
         guess = int(guess_str)
         result = self.game.check_guess(guess)
+        attempt_no = self.game.attempts
+
+        resultText = {
+            "<": "Меньше",
+            ">": "Больше",
+            "==": "Угадал"
+        }.get(result, "???")
+
+        self.results_table.insert("", tk.END, values=(attempt_no, guess, resultText))
 
         if result == ">":
             self.status.config(
@@ -66,6 +73,8 @@ class GameUI:
 
     def restart_game(self):
         self.game.reset()
+        for row in self.results_table.get_children():
+            self.results_table.delete(row)
         self.status.config(text="У тебя 10 попыток", font=("Arial", 14))
         self.entry.delete(0, tk.END)
         self.entry.focus()
@@ -92,3 +101,40 @@ class GameUI:
         text_widget.insert("1.0", banner_text)
         text_widget.config(state="disabled")
         text_widget.pack(pady=(10, 15))
+
+    def prepare_buttons(self):
+        table_frame = tk.Frame(self.root)
+        table_frame.pack(pady=10, anchor="center")
+
+        self.check_button = tk.Button(table_frame, text="Проверить", command=self.process_input)
+        self.restart_button = tk.Button(table_frame, text="Заново", command=self.restart_game)
+
+        self.check_button.grid(row=0, column=0)
+        self.restart_button.grid(row=0, column=1)
+
+    def prepare_table(self):
+        table_frame = tk.Frame(self.root)
+        table_frame.pack(pady=10, anchor="center")
+
+        columns = {
+            "№": 30,
+            "attempts": 80,
+            "result": 100
+        }
+
+        self.results_table = ttk.Treeview(
+            table_frame,
+            columns=list(columns),
+            show="headings",
+            height=3
+        )
+
+        for name, width in columns.items():
+            self.results_table.heading(name, text=name.capitalize())
+            self.results_table.column(name, width=width, anchor="center")
+
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.results_table.yview)
+        self.results_table.configure(yscrollcommand=scrollbar.set)
+
+        self.results_table.grid(row=0, column=0)
+        scrollbar.grid(row=0, column=1, sticky="ns")
