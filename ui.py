@@ -39,7 +39,7 @@ class GameUI:
         self.entry.delete(0, tk.END)
 
         if not guess_str.isdigit():
-            messagebox.showwarning(tr.__("Error"), tr.__("Enter a number!"))
+            messagebox.showwarning(tr.__("Error"), tr.__("Please enter a number!"))
             return
 
         guess = int(guess_str)
@@ -60,19 +60,19 @@ class GameUI:
                 font=("Arial", 14)
             )
         elif result == "==":
-            messagebox.showinfo(tr.__(resultText) + "!", f"You guessed it in {self.game.attempts} tries!")
+            messagebox.showinfo(tr.__(resultText) + "!", tr.__("You guessed it in {} attempts!", self.game.attempts))
             self.restart_game()
             return
 
         if self.game.is_game_over():
-            messagebox.showerror("Game Over", f"Number was: {self.game.secret}")
+            messagebox.showerror(tr.__("Game Over"), tr.__("Number was: {}", self.game.secret))
             self.restart_game()
 
     def restart_game(self):
         self.game.reset()
         for row in self.results_table.get_children():
             self.results_table.delete(row)
-        self.status.config(text=f"You have {self.game.max_attempts} attempts", font=("Arial", 14))
+        self.status.config(text=tr.__("You have {} attempts", self.game.max_attempts), font=("Arial", 14))
         self.entry.delete(0, tk.END)
         self.entry.focus()
 
@@ -85,7 +85,7 @@ class GameUI:
             with open(filepath, encoding="utf-8") as file:
                  banner_text = file.read()
         except FileNotFoundError:
-            banner_text = "Guess the number"
+            banner_text = tr.__("Guess the number")
 
         text_widget = tk.Text(
             self.root,
@@ -103,8 +103,8 @@ class GameUI:
         table_frame = tk.Frame(self.root)
         table_frame.pack(pady=10, anchor="center")
 
-        self.check_button = tk.Button(table_frame, text="Check", command=self.process_input)
-        self.restart_button = tk.Button(table_frame, text="Restart", command=self.restart_game)
+        self.check_button = tk.Button(table_frame, text=tr.__("Check"), command=self.process_input)
+        self.restart_button = tk.Button(table_frame, text=tr.__("Restart"), command=self.restart_game)
 
         self.check_button.grid(row=0, column=0)
         self.restart_button.grid(row=0, column=1)
@@ -127,7 +127,7 @@ class GameUI:
         )
 
         for name, width in columns.items():
-            self.results_table.heading(name, text=name.capitalize())
+            self.results_table.heading(name, text=tr.__(name).capitalize())
             self.results_table.column(name, width=width, anchor="center")
 
         scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.results_table.yview)
